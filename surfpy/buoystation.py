@@ -73,7 +73,8 @@ class BuoyStation(BaseStation):
             return None
 
         data = BuoyData(units.Units.english)
-        data.date = pytz.utc.localize(datetime.strptime(raw_data[4], '%H%M %Z %m/%d/%y'))
+        data.date = pytz.utc.localize(
+            datetime.strptime(raw_data[4], '%H%M %Z %m/%d/%y'))
         print(data.date)
         print(raw_data[4])
 
@@ -91,11 +92,15 @@ class BuoyStation(BaseStation):
             raw_value = comps[1].strip().split()
 
             if variable == 'wind':
-                data.wind_direction = parse_float(re.findall("\d+", raw_value[1])[0])
-                data.wind_compass_direction = units.degree_to_direction(data.wind_direction)
-                data.wind_speed = units.convert(parse_float(raw_value[2]), units.Measurement.speed, units.Units.knots, units.Units.english)
+                data.wind_direction = parse_float(
+                    re.findall("\d+", raw_value[1])[0])
+                data.wind_compass_direction = units.degree_to_direction(
+                    data.wind_direction)
+                data.wind_speed = units.convert(parse_float(
+                    raw_value[2]), units.Measurement.speed, units.Units.knots, units.Units.english)
             elif variable == 'gust':
-                data.wind_gust = units.convert(parse_float(raw_value[0]), units.Measurement.speed, units.Units.knots, units.Units.english)
+                data.wind_gust = units.convert(parse_float(
+                    raw_value[0]), units.Measurement.speed, units.Units.knots, units.Units.english)
             elif variable == 'seas':
                 wave_summary.wave_height = parse_float(raw_value[0])
             elif variable == 'peak period':
@@ -128,11 +133,13 @@ class BuoyStation(BaseStation):
             elif variable == 'direction':
                 if not swell_direction_read:
                     swell_component.compass_direction = raw_value[0]
-                    swell_component.direction = units.direction_to_degree(swell_component.compass_direction)
+                    swell_component.direction = units.direction_to_degree(
+                        swell_component.compass_direction)
                     swell_direction_read = True
                 else:
                     wind_wave_component.compass_direction = raw_value[0]
-                    wind_wave_component.direction = units.direction_to_degree(wind_wave_component.compass_direction)
+                    wind_wave_component.direction = units.direction_to_degree(
+                        wind_wave_component.compass_direction)
 
         if not math.isnan(wave_summary.wave_height):
             data.wave_summary = wave_summary
@@ -163,22 +170,26 @@ class BuoyStation(BaseStation):
             raw_data_line = raw_data[i].split()
             data = BuoyData(units.Units.metric)
             wave_summary = Swell(units.Units.metric)
-            data.date = pytz.utc.localize(datetime(*[int(x) for x in raw_data_line[0:5]]))
+            data.date = pytz.utc.localize(
+                datetime(*[int(x) for x in raw_data_line[0:5]]))
             data.wind_direction = parse_float(raw_data_line[5])
-            data.wind_compass_direction = units.degree_to_direction(data.wind_direction)
+            data.wind_compass_direction = units.degree_to_direction(
+                data.wind_direction)
             data.wind_speed = parse_float(raw_data_line[6])
             data.wind_gust = parse_float(raw_data_line[7])
             wave_summary.wave_height = parse_float(raw_data_line[8])
             wave_summary.period = parse_float(raw_data_line[9])
             data.average_period = parse_float(raw_data_line[10])
             wave_summary.direction = parse_float(raw_data_line[11])
-            wave_summary.compass_direction = units.degree_to_direction(wave_summary.direction)
+            wave_summary.compass_direction = units.degree_to_direction(
+                wave_summary.direction)
             data.pressure = parse_float(raw_data_line[12])
             data.air_temperature = parse_float(raw_data_line[13])
             data.water_temperature = parse_float(raw_data_line[14])
             data.dewpoint_temperature = parse_float(raw_data_line[15])
             data.pressure_tendency = parse_float(raw_data_line[17])
-            data.water_level = units.convert(parse_float(raw_data_line[18]), units.Measurement.length, units.Units.english, units.Units.metric)
+            data.water_level = units.convert(parse_float(
+                raw_data_line[18]), units.Measurement.length, units.Units.english, units.Units.metric)
             data.find_expiration_date()
             all_data.append(data)
 
@@ -206,20 +217,24 @@ class BuoyStation(BaseStation):
             data.wave_summary = Swell(units.Units.metric)
             swell_component = Swell(units.Units.metric)
             wind_wave_component = Swell(units.Units.metric)
-            data.date = pytz.utc.localize(datetime(*[int(x) for x in raw_data_line[0:5]]))
+            data.date = pytz.utc.localize(
+                datetime(*[int(x) for x in raw_data_line[0:5]]))
             data.wave_summary.wave_height = parse_float(raw_data_line[5])
             swell_component.wave_height = parse_float(raw_data_line[6])
             swell_component.period = parse_float(raw_data_line[7])
             wind_wave_component.wave_height = parse_float(raw_data_line[8])
             wind_wave_component.period = parse_float(raw_data_line[9])
             swell_component.compass_direction = raw_data_line[10]
-            swell_component.direction = units.direction_to_degree(swell_component.compass_direction)
+            swell_component.direction = units.direction_to_degree(
+                swell_component.compass_direction)
             wind_wave_component.compass_direction = raw_data_line[11]
-            wind_wave_component.direction = units.direction_to_degree(wind_wave_component.compass_direction)
+            wind_wave_component.direction = units.direction_to_degree(
+                wind_wave_component.compass_direction)
             data.steepness = raw_data_line[12]
             data.average_period = parse_float(raw_data_line[13])
             data.wave_summary.direction = parse_float(raw_data_line[14])
-            data.wave_summary.compass_direction = units.degree_to_direction(data.wave_summary.direction)
+            data.wave_summary.compass_direction = units.degree_to_direction(
+                data.wave_summary.direction)
 
             data.swell_components.append(swell_component)
             data.swell_components.append(wind_wave_component)
@@ -234,29 +249,49 @@ class BuoyStation(BaseStation):
     def parse_wave_spectra_reading_data(energy_data, directional_data, count_limit, latest_report_date=None):
         energy_data = energy_data.split('\n')
         directional_data = directional_data.split('\n')
-        if len(energy_data) != len(directional_data):
-            print('Failed to parse wave spectra data')
-            return None
-        elif len(energy_data) < 2:
-            print('Failed to parse wave spectra data')
+        header_lines = 1
+
+        if len(energy_data) < 2:
+            print('Failed to parse wave energy spectra data')
             return None
 
-        header_lines = 1
+        if len(directional_data) < 2:
+            print('Failed to parse wave directional spectra data')
+            return None
+
+        # Ensure both datasets have at least [count_limit] data lines (not including headers)
+        if len(energy_data) - header_lines < count_limit or len(directional_data) - header_lines < count_limit:
+            # If the data lines are below the count_limit, check whether available data lines are equal.
+            if len(energy_data) != len(directional_data):
+                print(
+                    'Failed to parse wave spectra data: available data lines are not equal')
+                return None
+
+        # if len(energy_data) != len(directional_data):
+        #     print('Failed to parse wave spectra data')
+        #     return None
+        # elif len(energy_data) < 2:
+        #     print('Failed to parse wave spectra data')
+        #     return None
+
         data_lines = len(energy_data) - header_lines
         if data_lines > count_limit and count_limit > 0:
             data_lines = count_limit
 
         all_data = []
         for i in range(header_lines, header_lines + data_lines):
-            raw_energy = energy_data[i].strip().replace(')', '').replace('(', '').split()
-            raw_directional = directional_data[i].strip().replace(')', '').replace('(', '').split()
+            raw_energy = energy_data[i].strip().replace(
+                ')', '').replace('(', '').split()
+            raw_directional = directional_data[i].strip().replace(
+                ')', '').replace('(', '').split()
 
             spectra = BuoySpectra()
             data = BuoyData(units.Units.metric)
             if len(all_data) == 0 and latest_report_date is not None:
                 data.date = pytz.utc.localize(latest_report_date)
             else:
-                data.date = pytz.utc.localize(datetime(*[int(x) for x in raw_energy[0:5]]))
+                data.date = pytz.utc.localize(
+                    datetime(*[int(x) for x in raw_energy[0:5]]))
 
             for j in range(5, len(raw_directional), 2):
                 spectra.frequency.append(parse_float(raw_directional[j + 1]))
@@ -268,7 +303,8 @@ class BuoyStation(BaseStation):
             data.wave_spectra = spectra
             data.wave_summary = spectra.wave_summary
             data.swell_components = spectra.swell_components
-            data.steepness = steepness(data.wave_summary.wave_height, data.wave_summary.period)
+            data.steepness = steepness(
+                data.wave_summary.wave_height, data.wave_summary.period)
             data.average_period = spectra.average_period
 
             data.find_expiration_date()
@@ -290,8 +326,9 @@ class BuoyStation(BaseStation):
             data_lines = count_limit
 
         raw_model_run_components = raw_lines[2].split()
-        #hour = int(raw_model_run_components[3])
-        model_run_date = datetime.strptime(raw_model_run_components[2], '%Y%m%d')
+        # hour = int(raw_model_run_components[3])
+        model_run_date = datetime.strptime(
+            raw_model_run_components[2], '%Y%m%d')
 
         buoy_data = []
         for i in range(HEADER_LINES, data_lines + HEADER_LINES):
@@ -299,7 +336,7 @@ class BuoyStation(BaseStation):
             if len(columns) < 8:
                 print('asjhdkajhsd')
                 continue
-            
+
             # First column is date and time, second is the index, all the other are wave components
             raw_date_components = columns[1].split()
             if len(raw_date_components) != 2:
@@ -311,11 +348,12 @@ class BuoyStation(BaseStation):
             if day < model_run_date.day:
                 if model_run_date.month == 12:
                     month = 1
-                else: 
+                else:
                     month += 1
-            
+
             datapoint = BuoyData(unit=units.Units.metric)
-            datapoint.date = pytz.utc.localize(datetime(model_run_date.year, month, day, hour))
+            datapoint.date = pytz.utc.localize(
+                datetime(model_run_date.year, month, day, hour))
 
             summary = columns[2].split()
             if len(summary) < 2:
@@ -335,18 +373,22 @@ class BuoyStation(BaseStation):
                 component_wave_height = parse_float(raw_wave_data[0].strip())
                 component_period = parse_float(raw_wave_data[1].strip())
                 component_direction = parse_float(raw_wave_data[2].strip())
-                component_compass_direction = units.degree_to_direction(component_direction)
-                component = Swell(units.Units.metric, component_wave_height, component_period, component_direction, component_compass_direction)
- 
+                component_compass_direction = units.degree_to_direction(
+                    component_direction)
+                component = Swell(units.Units.metric, component_wave_height,
+                                  component_period, component_direction, component_compass_direction)
+
                 if significant is not None:
-                    datapoint.wave_summary = Swell(units.Units.metric, significant_wave_height, component_period, component_direction, component_compass_direction)
+                    datapoint.wave_summary = Swell(
+                        units.Units.metric, significant_wave_height, component_period, component_direction, component_compass_direction)
                 datapoint.swell_components.append(component)
-            
+
             if not datapoint.wave_summary:
-                datapoint.wave_summary = Swell(units.Units.metric, significant_wave_height, datapoint.swell_components[0].period, datapoint.swell_components[0].direction, datapoint.swell_components[0].compass_direction)
+                datapoint.wave_summary = Swell(units.Units.metric, significant_wave_height, datapoint.swell_components[
+                                               0].period, datapoint.swell_components[0].direction, datapoint.swell_components[0].compass_direction)
 
             buoy_data.append(datapoint)
-            
+
         return buoy_data
 
     def fetch_latest_reading(self):
@@ -375,11 +417,12 @@ class BuoyStation(BaseStation):
             return None
 
         # The spectra date is often update multiple times per hour but the time reported in the data is
-        # only the most recent hour number which is not accurate enough for us unless it is in the past. 
+        # only the most recent hour number which is not accurate enough for us unless it is in the past.
         # FORMAT Mon, 29 Jun 2020 14:50:20 GMT
         raw_modification_date = energy_response.headers['Last-Modified']
-        modification_date = datetime.strptime(raw_modification_date, '%a, %d %b %Y %H:%M:%S %Z')
-        
+        modification_date = datetime.strptime(
+            raw_modification_date, '%a, %d %b %Y %H:%M:%S %Z')
+
         return self.parse_wave_spectra_reading_data(energy_response.text, directional_response.text, data_count, modification_date)
 
     def fetch_wave_forecast_bulletin(self, model):
