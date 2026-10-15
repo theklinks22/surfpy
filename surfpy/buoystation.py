@@ -8,6 +8,7 @@ from datetime import datetime
 from .tools import parse_float, parse_int, steepness
 from . import units
 import re
+import time
 try:
     import requests
 except:
@@ -27,7 +28,7 @@ class BuoyStation(BaseStation):
         tao = 'tao'
         other = 'other'
 
-    def __init__(self, station_id, location, owner='', program='', active=False, currents=False, water_quality=False, dart=False, buoy_type=BuoyType.none, name=''):
+    def __init__(self, station_id, location, owner='', program='', active=False, currents=False, water_quality=False, dart=False, buoy_type=BuoyType.none, name='', user_agent=None):
         super(BuoyStation, self).__init__(station_id, location)
 
         # Attributes
@@ -38,6 +39,12 @@ class BuoyStation(BaseStation):
         self.currents = currents
         self.water_quality = water_quality
         self.dart = dart
+        # Optional User-Agent sent with NOAA requests so operators can
+        # identify themselves (e.g. 'MyApp/1.0 (+https://mysite.com; me@mysite.com)')
+        self.user_agent = user_agent
+
+    def _headers(self):
+        return {'User-Agent': self.user_agent} if self.user_agent else None
 
     @property
     def latest_reading_url(self):
@@ -397,28 +404,36 @@ class BuoyStation(BaseStation):
 
     def fetch_latest_reading(self):
         print(self.latest_reading_url)
-        response = requests.get(self.latest_reading_url, timeout=30)
+        response = requests.get(self.latest_reading_url,
+                                headers=self._headers(), timeout=30)
         if len(response.text) < 1:
             return None
         return self.parse_latest_reading_data(response.text)
 
     def fetch_meteorological_reading(self, data_count=20):
-        response = requests.get(self.meteorological_reading_url, timeout=30)
+        response = requests.get(self.meteorological_reading_url,
+                                headers=self._headers(), timeout=30)
         if len(response.text) < 1:
             return None
         return self.parse_meteorological_reading_data(response.text, data_count)
 
     def fetch_detailed_wave_reading(self, data_count=20):
-        response = requests.get(self.detailed_wave_reading_url, timeout=30)
+        response = requests.get(self.detailed_wave_reading_url,
+                                headers=self._headers(), timeout=30)
         if len(response.text) < 1:
             return None
         return self.parse_detailed_wave_reading_data(response.text, data_count)
 
     def fetch_wave_spectra_reading(self, data_count=20):
+        # Query param busts NOAA's response cache, which can serve data
+        # ~10 minutes stale
+        cache_buster = int(time.time())
         energy_response = requests.get(
-            self.wave_energy_reading_url, timeout=30)
+            f'{self.wave_energy_reading_url}?_={cache_buster}',
+            headers=self._headers(), timeout=30)
         directional_response = requests.get(
-            self.directional_wave_reading_url, timeout=30)
+            f'{self.directional_wave_reading_url}?_={cache_buster}',
+            headers=self._headers(), timeout=30)
         if len(energy_response.text) < 1 or len(directional_response.text) < 1:
             return None
 
@@ -434,7 +449,7 @@ class BuoyStation(BaseStation):
     def fetch_wave_forecast_bulletin(self, model):
         url = self.wave_forecast_bulletin_url(model)
         print(url)
-        response = requests.get(url, timeout=30)
+        response = requests.get(url, headers=self._headers(), timeout=30)
         if len(response.text) < 1:
             return None
         return self.parse_wave_forecast_bulletin(response.text, None)
