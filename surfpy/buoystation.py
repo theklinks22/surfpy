@@ -285,6 +285,10 @@ class BuoyStation(BaseStation):
             raw_directional = directional_data[i].strip().replace(
                 ')', '').replace('(', '').split()
 
+            if len(raw_energy) < 6 or len(raw_directional) < 6:
+                # Trailing or blank line in the file
+                continue
+
             spectra = BuoySpectra()
             data = BuoyData(units.Units.metric)
             if len(all_data) == 0 and latest_report_date is not None:

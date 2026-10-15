@@ -1,11 +1,13 @@
 from setuptools import setup
 
 setup(name='surfpy',
-      version='0.98.1',
+      version='0.98.2',
       description='Wave and weather tools written in pure python',
       url='https://github.com/mpiannucci/surfpy',
       author='Matthew Iannucci',
       author_email='rhodysurf13@gmail.com',
+      maintainer='Andrew Kallinikos',
+      maintainer_email='klinks22@gmail.com',
       license='MIT',
       packages=['surfpy'],
       install_requires=['requests', 'pytz'],
